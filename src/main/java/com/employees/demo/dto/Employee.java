@@ -15,10 +15,10 @@ import lombok.NoArgsConstructor;
 public class Employee {
 
 	@Id
-	private Integer employeeId;
-	private String firstName;
-	private String secondName;
-	private String age;
-	private String dept;
-	private BigDecimal salary;
+	Integer employeeId;
+	String firstName;
+	String secondName;
+	String age;
+	String dept;
+	BigDecimal salary;
 }
