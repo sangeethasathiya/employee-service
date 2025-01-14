@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.employees.demo.controller.EmployeeController;
+import com.employees.demo.customexception.EmployeeAlreadyExistsException;
+import com.employees.demo.customexception.NoSuchEmployeeExistsException;
 import com.employees.demo.dto.Employee;
 import com.employees.demo.repo.EmployeeRepository;
 import com.employees.demo.service.EmployeeService;
@@ -34,14 +36,19 @@ public class EmployeeServiceImpl implements EmployeeService {
 	@Override
 	public ResponseEntity<Employee> getEmployee(Integer employeeId) {
 		log.info("Fetching Employee Details using employeeID : {}", employeeId);
-		return employeeRepository.findById(employeeId).map(ResponseEntity::ok)
-				.orElseThrow(EntityNotFoundException::new);
+		return employeeRepository.findById(employeeId).map(ResponseEntity::ok).orElseThrow(
+				() -> new NoSuchEmployeeExistsException("No Employee found with EmployeeID : " + employeeId));
 	}
 
 	@Override
 	public Employee saveEmployee(Employee employee) {
-		log.info("Saving the Employee Detail to DB");
-		return employeeRepository.save(employee);
+		Employee existingEmployee = employeeRepository.findById(employee.getEmployeeId()).orElse(null);
+		if (existingEmployee == null) {
+			employeeRepository.save(employee);
+			log.info("Employee added successfully");
+			return employee;
+		} else
+			throw new EmployeeAlreadyExistsException("Employee already exists.");
 	}
 
 	@Override
@@ -55,7 +62,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 			employeeRepository.save(updatedEmployee);
 			log.info("Updated the Employee Detail for employee ID : {}", employeeId);
 			return ResponseEntity.ok(employee);
-		}).orElseThrow(EntityNotFoundException::new);
+		}).orElseThrow(() -> new NoSuchEmployeeExistsException("No Employee found with EmployeeID : " + employeeId));
 	}
 
 	@Override
@@ -63,7 +70,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 		return employeeRepository.findById(employeeId).map(employee -> {
 			employeeRepository.delete(employee);
 			return ResponseEntity.ok().build();
-		}).orElseThrow(EntityNotFoundException::new);
+		}).orElseThrow(() -> new NoSuchEmployeeExistsException("No Employee found with EmployeeID : " + employeeId));
 	}
 
 }
